@@ -1,38 +1,70 @@
 import 'package:flutter/material.dart';
 
-class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({super.key});
+void main() {
+  runApp(WelcomeScreen());
+}
 
+class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Material(
-      child: Container(
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height,
-          padding: EdgeInsets.all(10),
-          child: Column(
-            children: [
-              SizedBox(height: 15),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    //Navigator.push(context,MaterialPageRoute(builder: (context) =>))
-                  },
-                  child: Text(
-                    "Skip",
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontSize: 20,
-                    ),
-                  ),
-                ),
+    return MaterialApp(
+      title: 'WelcomeScreen',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: HomePage(),
+    );
+  }
+}
+
+class HomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade400, Colors.blue.shade900],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Welcome',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 36,
+                fontWeight: FontWeight.bold,
               ),
-              SizedBox(
-                height:50
-              )
-            ],
-          )),
+            ),
+            SizedBox(height: 40),
+            ElevatedButton(
+              onPressed: () {},
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.blue.shade900,
+                padding: EdgeInsets.symmetric(horizontal: 100, vertical: 15),
+              ),
+              child: Text('Login'),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {},
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.blue.shade900,
+                padding: EdgeInsets.symmetric(horizontal: 100, vertical: 15),
+              ),
+              child: Text('Sign Up'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
