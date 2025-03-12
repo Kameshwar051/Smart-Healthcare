@@ -1,52 +1,39 @@
+import 'dart:ui'; // Needed for blur effect
 import 'package:flutter/material.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey, // Allows controlling the drawer manually
       backgroundColor: Colors.blue.shade50,
       appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text('Smart Healthcare'),
+        automaticallyImplyLeading: false, 
         backgroundColor: Colors.blueAccent,
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'Settings':
-                  Navigator.pushNamed(context, '/settings');
-                  break;
-                case 'Chat':
-                  Navigator.pushNamed(context, '/chat');
-                  break;
-                case 'Generate Report':
-                  Navigator.pushNamed(context, '/report');
-                  break;
-                case 'Logout':
-                  Navigator.pushNamed(context, '/login');
-                  break;
-                case 'About':
-                  Navigator.pushNamed(context, '/about');
-                  break;
-              }
-            },
-            itemBuilder: (BuildContext context) => [
-              const PopupMenuItem(value: 'Settings', child: Text('Settings')),
-              const PopupMenuItem(value: 'Chat', child: Text('Chat')),
-              const PopupMenuItem(value: 'Generate Report', child: Text('Generate Report')),
-              const PopupMenuItem(value: 'Logout', child: Text('Logout')),
-              const PopupMenuItem(value: 'About', child: Text('About')),
-            ],
-          ),
-        ],
+        title: const Text('Smart Healthcare'),
+        leading: IconButton(
+          icon: const Icon(Icons.menu), // Hamburger menu icon
+          onPressed: () {
+            _scaffoldKey.currentState?.openDrawer();
+          },
+        ),
       ),
+
+      drawer: _buildCustomDrawer(context), // Custom Drawer with blur effect
 
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
-          child: SingleChildScrollView( // Fixed Overflow Issue
+          child: SingleChildScrollView(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -64,8 +51,7 @@ class HomePage extends StatelessWidget {
                     return _buildHealthCard(
                       data['title']!, 
                       data['value']!, 
-                      data['color']!, 
-                      'assets/${data['imagePath']!}'
+                      data['imagePath']!
                     );
                   },
                 ),
@@ -74,6 +60,58 @@ class HomePage extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  // Drawer with Blur Effect
+  Widget _buildCustomDrawer(BuildContext context) {
+    return SizedBox(
+      width: MediaQuery.of(context).size.width * 0.75, // 3/4 width of screen
+      child: Drawer(
+        child: Stack(
+          children: [
+            // Blurred background
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                child: Container(color: Colors.black.withAlpha((0.2 * 255).toInt()), // Converts opacity (0.2) to an integer (0-255)
+),
+              ),
+            ),
+
+            // Drawer Menu Content
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DrawerHeader(
+                  decoration: const BoxDecoration(color: Colors.blueAccent),
+                  child: const Text(
+                    'Menu',
+                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                _buildDrawerItem(context, 'Settings', Icons.settings, '/settings'),
+                _buildDrawerItem(context, 'Chat', Icons.chat, '/chat'),
+                _buildDrawerItem(context, 'Generate Report', Icons.insert_chart, '/report'),
+                _buildDrawerItem(context, 'Logout', Icons.exit_to_app, '/login'),
+                _buildDrawerItem(context, 'About', Icons.info, '/about'),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Drawer Menu Item
+  Widget _buildDrawerItem(BuildContext context, String title, IconData icon, String route) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.blueAccent),
+      title: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.pushNamed(context, route);
+      },
     );
   }
 
@@ -119,14 +157,20 @@ class HomePage extends StatelessWidget {
   }
 
   // Health Data List
-  final List<Map<String, dynamic>> healthData = const [
-    {'title': '❤️ Heart Rate', 'value': '75 bpm', 'color': Colors.red, 'imagePath': 'heart.png'},
-    {'title': '🩸 SpO2', 'value': '98%', 'color': Colors.green, 'imagePath': 'spo2.png'},
-    {'title': '🩺 BP', 'value': '120/80', 'color': Colors.orange, 'imagePath': 'bp.png'},
+  final List<Map<String, String>> healthData = [
+    {'title': '❤️ Heart Rate', 'value': '75 bpm', 'imagePath': 'heart.png'},
+    {'title': '🩸 SpO2', 'value': '98%', 'imagePath': 'spo2.png'},
+    {'title': '🩺 BP', 'value': '120/80', 'imagePath': 'bp.png'},
   ];
 
   // Health Data Card
-  Widget _buildHealthCard(String title, String value, Color color, String imagePath) {
+  Widget _buildHealthCard(String title, String value, String imagePath) {
+    Color cardColor = title.contains('Heart')
+        ? Colors.red
+        : title.contains('SpO2')
+        ? Colors.green
+        : Colors.orange;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(15),
@@ -144,7 +188,7 @@ class HomePage extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(imagePath, height: 40), // Icon Image
+          Image.asset(imagePath, height: 40),
           const SizedBox(width: 15),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,7 +196,7 @@ class HomePage extends StatelessWidget {
               Text(
                 value,
                 style: TextStyle(
-                  color: color,
+                  color: cardColor,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
