@@ -1,5 +1,7 @@
 import 'dart:ui'; // Needed for blur effect
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -10,6 +12,30 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  String _username = "User"; // Default username
+  bool _showWelcomeBanner = true; // Controls visibility of welcome banner
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      if (userDoc.exists) {
+        setState(() {
+          _username = userDoc['name'] ?? "User";
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +43,7 @@ class _HomePageState extends State<HomePage> {
       key: _scaffoldKey, // Allows controlling the drawer manually
       backgroundColor: Colors.blue.shade50,
       appBar: AppBar(
-        automaticallyImplyLeading: false, 
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.blueAccent,
         title: const Text('Smart Healthcare'),
         leading: IconButton(
@@ -38,7 +64,7 @@ class _HomePageState extends State<HomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                _buildWelcomeBanner(),
+                if (_showWelcomeBanner) _buildWelcomeBanner(),
                 const SizedBox(height: 20),
 
                 // Health Data ListView
@@ -49,10 +75,7 @@ class _HomePageState extends State<HomePage> {
                   itemBuilder: (context, index) {
                     final data = healthData[index];
                     return _buildHealthCard(
-                      data['title']!, 
-                      data['value']!, 
-                      data['imagePath']!
-                    );
+                        data['title']!, data['value']!, data['imagePath']!);
                   },
                 ),
               ],
@@ -74,26 +97,32 @@ class _HomePageState extends State<HomePage> {
             Positioned.fill(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                child: Container(color: Colors.black.withAlpha((0.2 * 255).toInt()), // Converts opacity (0.2) to an integer (0-255)
-),
+                child: Container(
+                    color: Colors.black.withAlpha((0.2 * 255).toInt())),
               ),
             ),
 
             // Drawer Menu Content
             Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 DrawerHeader(
                   decoration: const BoxDecoration(color: Colors.blueAccent),
                   child: const Text(
                     'Menu',
-                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
-                _buildDrawerItem(context, 'Settings', Icons.settings, '/settings'),
-                _buildDrawerItem(context, 'Chat', Icons.chat, '/chat'),
-                _buildDrawerItem(context, 'Generate Report', Icons.insert_chart, '/report'),
-                _buildDrawerItem(context, 'Logout', Icons.exit_to_app, '/login'),
+                _buildDrawerItem(
+                    context, 'Settings', Icons.settings, '/settings'),
+                _buildDrawerItem(
+                    context, 'Chat', Icons.chat, '/chat_front_page'),
+                _buildDrawerItem(
+                    context, 'Generate Report', Icons.insert_chart, '/report'),
+                _buildDrawerItem(context, 'Logout', Icons.exit_to_app, '/home'),
                 _buildDrawerItem(context, 'About', Icons.info, '/about'),
               ],
             ),
@@ -104,10 +133,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   // Drawer Menu Item
-  Widget _buildDrawerItem(BuildContext context, String title, IconData icon, String route) {
+  Widget _buildDrawerItem(
+      BuildContext context, String title, IconData icon, String route) {
     return ListTile(
       leading: Icon(icon, color: Colors.blueAccent),
-      title: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+      title: Text(title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
       onTap: () {
         Navigator.pop(context);
         Navigator.pushNamed(context, route);
@@ -115,7 +146,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Welcome Banner
+  // Welcome Banner with Delete Button
   Widget _buildWelcomeBanner() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -135,21 +166,34 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            "Welcome Back! 👋",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Welcome, $_username! 👋",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 5),
+              const Text(
+                "Stay healthy with real-time health updates",
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+            ],
           ),
-          SizedBox(height: 5),
-          Text(
-            "Stay healthy with real-time health updates",
-            style: TextStyle(color: Colors.white70, fontSize: 14),
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () {
+              setState(() {
+                _showWelcomeBanner = false; // Hide welcome banner
+              });
+            },
           ),
         ],
       ),
@@ -168,8 +212,8 @@ class _HomePageState extends State<HomePage> {
     Color cardColor = title.contains('Heart')
         ? Colors.red
         : title.contains('SpO2')
-        ? Colors.green
-        : Colors.orange;
+            ? Colors.green
+            : Colors.orange;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
@@ -204,7 +248,8 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 5),
               Text(
                 title,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
               ),
             ],
           ),

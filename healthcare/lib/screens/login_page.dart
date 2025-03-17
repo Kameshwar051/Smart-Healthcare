@@ -28,7 +28,7 @@ class _LoginPageState extends State<LoginPage> {
           const SnackBar(content: Text('Login Successful!')),
         );
 
-        Navigator.pushReplacementNamed(context, '/home'); // Navigate to Home
+        Navigator.pushReplacementNamed(context, '/home_page'); // Navigate to Home
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
