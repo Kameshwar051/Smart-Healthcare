@@ -1,8 +1,7 @@
-import 'dart:ui';
+import 'dart:ui'; // Needed for blur effect
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_database/firebase_database.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,16 +13,13 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  String _username = "User";
-  bool _showWelcomeBanner = true;
-  Map<String, dynamic>? _latestHealthData;
+  String _username = "User"; // Default username
+  bool _showWelcomeBanner = true; // Controls visibility of welcome banner
 
   @override
   void initState() {
     super.initState();
     _fetchUserData();
-    _fetchLatestHealthData();
   }
 
   Future<void> _fetchUserData() async {
@@ -41,43 +37,25 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> _fetchLatestHealthData() async {
-    DatabaseReference ref = FirebaseDatabase.instance.ref('health_data');
-    DataSnapshot snapshot = await ref.get();
-
-    if (snapshot.exists) {
-      Map data = snapshot.value as Map;
-      List<MapEntry> entries = data.entries.toList()
-        ..sort((a, b) =>
-            b.value['timestamp'].toString().compareTo(a.value['timestamp'].toString()));
-
-      setState(() {
-        _latestHealthData = Map<String, dynamic>.from(entries.first.value);
-      });
-    } else {
-      setState(() {
-        _latestHealthData = null;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
+      key: _scaffoldKey, // Allows controlling the drawer manually
       backgroundColor: Colors.blue.shade50,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.blueAccent,
         title: const Text('Smart Healthcare'),
         leading: IconButton(
-          icon: const Icon(Icons.menu),
+          icon: const Icon(Icons.menu), // Hamburger menu icon
           onPressed: () {
             _scaffoldKey.currentState?.openDrawer();
           },
         ),
       ),
-      drawer: _buildCustomDrawer(context),
+
+      drawer: _buildCustomDrawer(context), // Custom Drawer with blur effect
+
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -89,22 +67,17 @@ class _HomePageState extends State<HomePage> {
                 if (_showWelcomeBanner) _buildWelcomeBanner(),
                 const SizedBox(height: 20),
 
-                _latestHealthData == null
-                    ? const Text("No readings found",
-                        style: TextStyle(fontSize: 18))
-                    : Column(
-                        children: [
-                          _buildHealthCard(
-                              "❤️ Heart Rate",
-                              "${_latestHealthData!['heart_rate']?.toStringAsFixed(1)} bpm",
-                              'assets/heart.png'),
-                          _buildHealthCard("🩸 SpO2",
-                              "${_latestHealthData!['spo2']}%", 'assets/spo2.png'),
-                          _buildHealthCard("🩺 BP",
-                              "${_latestHealthData!['bp']?.toStringAsFixed(1)}",
-                              'assets/bp.png'),
-                        ],
-                      ),
+                // Health Data ListView
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: healthData.length,
+                  itemBuilder: (context, index) {
+                    final data = healthData[index];
+                    return _buildHealthCard(
+                        data['title']!, data['value']!, data['imagePath']!);
+                  },
+                ),
               ],
             ),
           ),
@@ -113,12 +86,14 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Drawer with Blur Effect
   Widget _buildCustomDrawer(BuildContext context) {
     return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.75,
+      width: MediaQuery.of(context).size.width * 0.75, // 3/4 width of screen
       child: Drawer(
         child: Stack(
           children: [
+            // Blurred background
             Positioned.fill(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
@@ -126,6 +101,8 @@ class _HomePageState extends State<HomePage> {
                     color: Colors.black.withAlpha((0.2 * 255).toInt())),
               ),
             ),
+
+            // Drawer Menu Content
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -141,7 +118,8 @@ class _HomePageState extends State<HomePage> {
                 ),
                 _buildDrawerItem(
                     context, 'Settings', Icons.settings, '/settings'),
-                _buildDrawerItem(context, 'Chat', Icons.chat, '/chat_front_page'),
+                _buildDrawerItem(
+                    context, 'Chat', Icons.chat, '/chat_front_page'),
                 _buildDrawerItem(
                     context, 'Generate Report', Icons.insert_chart, '/report'),
                 _buildDrawerItem(context, 'Logout', Icons.exit_to_app, '/home'),
@@ -154,6 +132,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Drawer Menu Item
   Widget _buildDrawerItem(
       BuildContext context, String title, IconData icon, String route) {
     return ListTile(
@@ -167,6 +146,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Welcome Banner with Delete Button
   Widget _buildWelcomeBanner() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -213,7 +193,7 @@ class _HomePageState extends State<HomePage> {
             icon: const Icon(Icons.close, color: Colors.white),
             onPressed: () {
               setState(() {
-                _showWelcomeBanner = false;
+                _showWelcomeBanner = false; // Hide welcome banner
               });
             },
           ),
@@ -222,6 +202,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Health Data List
+  final List<Map<String, String>> healthData = [
+    {
+      'title': '❤️ Heart Rate',
+      'value': '75 bpm',
+      'imagePath': 'assets/heart.png'
+    },
+    {'title': '🩸 SpO2', 'value': '98%', 'imagePath': 'assets/spo2.png'},
+    {'title': '🩺 BP', 'value': '120/80', 'imagePath': 'assets/bp.png'},
+  ];
+
+  // Health Data Card
   Widget _buildHealthCard(String title, String value, String imagePath) {
     Color cardColor = title.contains('Heart')
         ? Colors.red
