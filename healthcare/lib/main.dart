@@ -6,7 +6,8 @@ import 'screens/home_page.dart';
 import 'screens/login_page.dart';
 import 'screens/signup_page.dart';
 import 'screens/chat_front_page.dart';
-import 'screens/chat_page.dart'; 
+import 'screens/chat_page.dart';
+import 'screens/generate_report.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +34,7 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => const SignUpPage(),
         '/home_page': (context) => const HomePage(),
         '/chat_front_page': (context) => const ChatFrontPage(),
+        '/report': (context) => const GenerateReportPage(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/chat_page') {
