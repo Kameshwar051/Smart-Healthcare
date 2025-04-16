@@ -8,12 +8,16 @@ import 'screens/signup_page.dart';
 import 'screens/chat_front_page.dart';
 import 'screens/chat_page.dart';
 import 'screens/generate_report.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'screens/global_anomaly_listener.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform.copyWith(
-      databaseURL: 'https://healthcare-578bf-default-rtdb.firebaseio.com/', // ✅ <-- Add this line!
+      databaseURL: 'https://healthcare-578bf-default-rtdb.firebaseio.com/',
     ),
   );
   runApp(const MyApp());
@@ -25,10 +29,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Smart Healthcare',
       theme: ThemeData(primarySwatch: Colors.blue),
       initialRoute: '/home',
+      builder: (context, child) {
+        final currentRoute = ModalRoute.of(context)?.settings.name ?? '';
+        return GlobalAnomalyListener(
+          child: child ?? const SizedBox(),
+          currentRoute: currentRoute,
+        );
+      },
       routes: {
         '/home': (context) => const WelcomePage(),
         '/login': (context) => const LoginPage(),
