@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -19,11 +20,19 @@ class _HomePageState extends State<HomePage> {
   bool _showWelcomeBanner = true;
   Map<String, dynamic>? _latestHealthData;
 
+  StreamSubscription<DatabaseEvent>? _healthDataSubscription;
+
   @override
   void initState() {
     super.initState();
     _fetchUserData();
-    _fetchLatestHealthData();
+    _listenToHealthData();
+  }
+
+  @override
+  void dispose() {
+    _healthDataSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _fetchUserData() async {
@@ -41,24 +50,36 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> _fetchLatestHealthData() async {
+  void _listenToHealthData() {
     DatabaseReference ref = FirebaseDatabase.instance.ref('health_data');
-    DataSnapshot snapshot = await ref.get();
+    _healthDataSubscription = ref.onValue.listen((DatabaseEvent event) {
+      if (event.snapshot.exists) {
+        Map data = event.snapshot.value as Map;
+        List<MapEntry> entries = data.entries.toList()
+          ..sort((a, b) => b.value['timestamp']
+              .toString()
+              .compareTo(a.value['timestamp'].toString()));
 
-    if (snapshot.exists) {
-      Map data = snapshot.value as Map;
-      List<MapEntry> entries = data.entries.toList()
-        ..sort((a, b) =>
-            b.value['timestamp'].toString().compareTo(a.value['timestamp'].toString()));
+        Map<String, dynamic> latest = Map<String, dynamic>.from(entries.first.value);
 
-      setState(() {
-        _latestHealthData = Map<String, dynamic>.from(entries.first.value);
-      });
-    } else {
-      setState(() {
-        _latestHealthData = null;
-      });
-    }
+        int latestTimestamp = int.tryParse(latest['timestamp'].toString()) ?? 0;
+        int now = DateTime.now().millisecondsSinceEpoch;
+
+        if ((now - latestTimestamp) <= 5000) {
+          setState(() {
+            _latestHealthData = latest;
+          });
+        } else {
+          setState(() {
+            _latestHealthData = null;
+          });
+        }
+      } else {
+        setState(() {
+          _latestHealthData = null;
+        });
+      }
+    });
   }
 
   @override
@@ -88,21 +109,26 @@ class _HomePageState extends State<HomePage> {
               children: [
                 if (_showWelcomeBanner) _buildWelcomeBanner(),
                 const SizedBox(height: 20),
-
                 _latestHealthData == null
                     ? const Text("No readings found",
                         style: TextStyle(fontSize: 18))
                     : Column(
                         children: [
                           _buildHealthCard(
-                              "❤️ Heart Rate",
-                              "${_latestHealthData!['heart_rate']?.toStringAsFixed(1)} bpm",
-                              'assets/heart.png'),
-                          _buildHealthCard("🩸 SpO2",
-                              "${_latestHealthData!['spo2']}%", 'assets/spo2.png'),
-                          _buildHealthCard("🩺 BP",
-                              "${_latestHealthData!['bp']?.toStringAsFixed(1)}",
-                              'assets/bp.png'),
+                            "❤️ Heart Rate",
+                            "${_latestHealthData!['heart_rate']?.toStringAsFixed(1)} bpm",
+                            'assets/heart.png',
+                          ),
+                          _buildHealthCard(
+                            "🩸 SpO2",
+                            "${_latestHealthData!['spo2']}%",
+                            'assets/spo2.png',
+                          ),
+                          _buildHealthCard(
+                            "🩺 BP",
+                            "${_latestHealthData!['bp']?.toStringAsFixed(1)}",
+                            'assets/bp.png',
+                          ),
                         ],
                       ),
               ],
@@ -123,7 +149,8 @@ class _HomePageState extends State<HomePage> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
                 child: Container(
-                    color: Colors.black.withAlpha((0.2 * 255).toInt())),
+                  color: Colors.black.withAlpha((0.2 * 255).toInt()),
+                ),
               ),
             ),
             Column(
@@ -141,10 +168,12 @@ class _HomePageState extends State<HomePage> {
                 ),
                 _buildDrawerItem(
                     context, 'Settings', Icons.settings, '/settings'),
-                _buildDrawerItem(context, 'Chat', Icons.chat, '/chat_front_page'),
                 _buildDrawerItem(
-                    context, 'Generate Report', Icons.insert_chart, '/report'),
-                _buildDrawerItem(context, 'Logout', Icons.exit_to_app, '/home'),
+                    context, 'Chat', Icons.chat, '/chat_front_page'),
+                _buildDrawerItem(context, 'Generate Report',
+                    Icons.insert_chart, '/report'),
+                _buildDrawerItem(
+                    context, 'Logout', Icons.exit_to_app, '/home'),
                 _buildDrawerItem(context, 'About', Icons.info, '/about'),
               ],
             ),

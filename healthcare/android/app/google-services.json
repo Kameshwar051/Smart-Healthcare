@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "633391327654",
+    "firebase_url": "https://healthcare-578bf-default-rtdb.firebaseio.com",
     "project_id": "healthcare-578bf",
     "storage_bucket": "healthcare-578bf.firebasestorage.app"
   },

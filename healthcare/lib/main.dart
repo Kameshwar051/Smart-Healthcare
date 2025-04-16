@@ -9,12 +9,13 @@ import 'screens/chat_front_page.dart';
 import 'screens/chat_page.dart';
 import 'screens/generate_report.dart';
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+    options: DefaultFirebaseOptions.currentPlatform.copyWith(
+      databaseURL: 'https://healthcare-578bf-default-rtdb.firebaseio.com/', // ✅ <-- Add this line!
+    ),
   );
-
   runApp(const MyApp());
 }
 

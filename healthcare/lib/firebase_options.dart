@@ -46,6 +46,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '633391327654',
     projectId: 'healthcare-578bf',
     authDomain: 'healthcare-578bf.firebaseapp.com',
+    databaseURL: 'https://healthcare-578bf-default-rtdb.firebaseio.com',
     storageBucket: 'healthcare-578bf.firebasestorage.app',
     measurementId: 'G-5310J046NY',
   );
@@ -55,6 +56,7 @@ class DefaultFirebaseOptions {
     appId: '1:633391327654:android:1279c25404aaa8b3b88767',
     messagingSenderId: '633391327654',
     projectId: 'healthcare-578bf',
+    databaseURL: 'https://healthcare-578bf-default-rtdb.firebaseio.com',
     storageBucket: 'healthcare-578bf.firebasestorage.app',
   );
 
@@ -63,6 +65,7 @@ class DefaultFirebaseOptions {
     appId: '1:633391327654:ios:78934f16a34f934cb88767',
     messagingSenderId: '633391327654',
     projectId: 'healthcare-578bf',
+    databaseURL: 'https://healthcare-578bf-default-rtdb.firebaseio.com',
     storageBucket: 'healthcare-578bf.firebasestorage.app',
     iosBundleId: 'com.example.healthcare',
   );
@@ -72,6 +75,7 @@ class DefaultFirebaseOptions {
     appId: '1:633391327654:ios:78934f16a34f934cb88767',
     messagingSenderId: '633391327654',
     projectId: 'healthcare-578bf',
+    databaseURL: 'https://healthcare-578bf-default-rtdb.firebaseio.com',
     storageBucket: 'healthcare-578bf.firebasestorage.app',
     iosBundleId: 'com.example.healthcare',
   );
@@ -82,6 +86,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '633391327654',
     projectId: 'healthcare-578bf',
     authDomain: 'healthcare-578bf.firebaseapp.com',
+    databaseURL: 'https://healthcare-578bf-default-rtdb.firebaseio.com',
     storageBucket: 'healthcare-578bf.firebasestorage.app',
     measurementId: 'G-XEXKBF2JTP',
   );

@@ -21,10 +21,7 @@ class GenerateReportPage extends StatefulWidget {
 }
 
 class _GenerateReportPageState extends State<GenerateReportPage> {
-  final dbRef = FirebaseDatabase.instanceFor(
-    app: Firebase.app(),
-    databaseURL: 'https://healthcare-578bf-default-rtdb.firebaseio.com/',
-  ).ref().child('health_data');
+  final dbRef = FirebaseDatabase.instance.ref().child('health_data');
 
   //final User? _user = FirebaseAuth.instance.currentUser;
 
@@ -224,29 +221,42 @@ class _GenerateReportPageState extends State<GenerateReportPage> {
                                           style: TextStyle(fontSize: 12),
                                         ),
                                         sideTitles: SideTitles(
-                                          showTitles: true,
-                                          interval: (_chartSpots.length / 4)
-                                              .clamp(1, 10)
-                                              .toDouble(),
-                                          getTitlesWidget: (value, meta) {
-                                            if (value.toInt() >=
-                                                filteredData.length) {
-                                              return const Text('');
-                                            }
-                                            final ts =
-                                                filteredData[value.toInt()]
-                                                    ['timestamp'];
-                                            return Padding(
-                                              padding:
-                                                  const EdgeInsets.only(top: 6),
-                                              child: Text(
-                                                DateFormat.Hm().format(ts),
-                                                style: const TextStyle(
-                                                    fontSize: 10),
-                                              ),
-                                            );
-                                          },
-                                        ),
+                                            showTitles: true,
+                                            getTitlesWidget: (value, meta) {
+                                              final int index = value.round();
+
+                                              // Don't go out of bounds
+                                              if (index < 0 ||
+                                                  index >=
+                                                      filteredData.length) {
+                                                return const SizedBox.shrink();
+                                              }
+
+                                              // Show only a few evenly spaced labels (max 6)
+                                              int total = filteredData.length;
+                                              int step = (total / 5)
+                                                  .ceil(); // show around 5–6 labels
+
+                                              if (index % step != 0 &&
+                                                  index != total - 1) {
+                                                return const SizedBox.shrink();
+                                              }
+
+                                              final DateTime ts =
+                                                  filteredData[index]
+                                                      ['timestamp'] as DateTime;
+
+                                              return Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 6),
+                                                child: Text(
+                                                  DateFormat.Hm().format(
+                                                      ts), // You can change format here
+                                                  style: const TextStyle(
+                                                      fontSize: 10),
+                                                ),
+                                              );
+                                            }),
                                       ),
                                       rightTitles: AxisTitles(
                                           sideTitles:
